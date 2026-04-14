@@ -129,3 +129,12 @@ async def ask_question(request: Request, body: AskRequest):
 @app.get("/")
 async def root():
     return {"message": "RAG QA System is running. Visit /docs for API documentation."}
+
+@app.get("/health")
+async def health():
+    """Health check endpoint for monitoring and deployment."""
+    return {
+        "status": "healthy",
+        "service": "RAG QA System",
+        "vector_store_exists": os.path.exists("vector_store/index.faiss")
+    }

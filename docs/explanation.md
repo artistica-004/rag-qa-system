@@ -33,3 +33,7 @@ Observed breakdown (on a sample 10-page PDF):
 
 **Finding:** The LLM API call dominates latency (>85% of total time). FAISS retrieval is negligible. 
 Optimization should focus on prompt length and model selection, not retrieval speed.
+
+## Architecture
+
+![Architecture Diagram](docs/architecture.svg)

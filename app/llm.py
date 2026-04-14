@@ -40,5 +40,7 @@ Answer:"""
         return answer_text, latency_ms
 
     except Exception as e:
-        print(f"LLM ERROR: {e}")
-        raise
+        error_msg = f"LLM Error: {str(e)}"
+        print(error_msg)
+        # Return graceful fallback instead of raising
+        return f"Unable to generate answer: {str(e)}", 0.0

@@ -2,6 +2,8 @@
 
 A **Retrieval-Augmented Generation** question-answering system that lets you upload documents (PDF/TXT) and ask questions about them. The system uses FAISS for semantic search and Groq LLMs for fast, accurate answers.
 
+**GitHub Repository:** https://github.com/artistica-004/rag-qa-system
+
 ## Quick Start
 
 ### 1. Setup
@@ -105,6 +107,107 @@ Body:
 
 ---
 
+## Health Check
+
+```
+GET /health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "RAG QA System",
+  "vector_store_exists": true
+}
+```
+
+Use this endpoint to verify the API is running and check if a vector store exists.
+
+---
+
+## Example Usage
+
+### Upload a Document (cURL)
+
+```bash
+curl -X POST "http://localhost:8000/upload" \
+  -F "file=@document.pdf"
+
+# Response:
+# {
+#   "job_id": "abc123...",
+#   "filename": "document.pdf",
+#   "status": "queued"
+# }
+```
+
+### Check Processing Status (cURL)
+
+```bash
+curl "http://localhost:8000/status/abc123..."
+
+# Keep polling until status is "done"
+```
+
+### Ask a Question (cURL)
+
+```bash
+curl -X POST "http://localhost:8000/ask" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "What are the main topics covered?",
+    "top_k": 5
+  }'
+```
+
+### Python Example
+
+```python
+import requests
+import time
+
+BASE_URL = "http://localhost:8000"
+
+# 1. Upload document
+with open("document.pdf", "rb") as f:
+    response = requests.post(
+        f"{BASE_URL}/upload",
+        files={"file": f}
+    )
+    job_id = response.json()["job_id"]
+    print(f"Upload job: {job_id}")
+
+# 2. Wait for processing
+while True:
+    status_response = requests.get(f"{BASE_URL}/status/{job_id}")
+    status = status_response.json()["status"]
+    if status == "done":
+        print("Document processed!")
+        break
+    elif status == "failed":
+        print(f"Error: {status_response.json()['message']}")
+        break
+    print(f"Status: {status}...")
+    time.sleep(2)
+
+# 3. Ask question
+answer_response = requests.post(
+    f"{BASE_URL}/ask",
+    json={
+        "query": "What is the main topic?",
+        "top_k": 5
+    }
+)
+
+result = answer_response.json()
+print(f"Answer: {result['answer']}")
+print(f"Sources: {len(result['sources'])} chunks retrieved")
+print(f"Latency: {result['latency_ms']}ms")
+```
+
+---
+
 ## Rate Limits
 
 - **Upload:** 5 requests per minute
@@ -201,11 +304,23 @@ Tracked from `/ask` request → JSON response.
 pytest tests/ -v
 ```
 
-Current tests:
-- API health check
-- File type validation
-- TXT upload and processing
-- Query handling without documents
+**Test Coverage:**
+- ✅ Health check endpoint
+- ✅ Root endpoint
+- ✅ File type validation (reject unsupported formats)
+- ✅ Empty file rejection
+- ✅ TXT file upload success
+- ✅ Missing file validation
+- ✅ Job status for non-existent jobs
+- ✅ Query validation (min/max length)
+- ✅ top_k parameter validation (range 1-20)
+- ✅ Query handling without uploaded documents
+- ✅ Rate limiting on upload (5/minute)
+- ✅ Rate limiting on asks (20/minute)
+
+**Run all tests:** `pytest tests/ -v`
+
+**Run specific test:** `pytest tests/test_api.py::test_upload_txt_file -v`
 
 ---
 
@@ -221,9 +336,10 @@ rag-qa-system/
 │   ├── models.py         # Pydantic request/response schemas
 │   └── rate_limiter.py   # slowapi rate limiting
 ├── docs/
-│   └── explanation.md    # Deep dive into design decisions
+│   ├── explanation.md    # Deep dive into design decisions & metrics
+│   └── architecture.svg  # System architecture diagram
 ├── tests/
-│   └── test_api.py       # API tests
+│   └── test_api.py       # Comprehensive API tests (12+ test cases)
 ├── vector_store/         # FAISS index + metadata (auto-created)
 ├── uploads/              # Uploaded documents (auto-created)
 ├── requirements.txt
