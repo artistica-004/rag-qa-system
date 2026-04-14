@@ -1,0 +1,8 @@
+Artificial Intelligence is transforming the world rapidly.
+Machine learning allows computers to learn patterns from data.
+Deep learning uses neural networks with many layers.
+Natural language processing helps computers understand human language.
+RAG systems combine document retrieval with AI generation for accurate answers.
+FastAPI is a modern web framework for building APIs with Python.
+Vector databases store embeddings and allow fast similarity search.
+Google Gemini is a powerful AI model made by Google for text generation.
